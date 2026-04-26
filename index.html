@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Burning Candle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-deep: #0d0a0e;
+      --candle-wax: #f5e6d3;
+      --candle-shadow: #d4c4b0;
+      --candle-mid: #e8d5be;
+      --flame-core: #fff4d6;
+      --flame-mid: #ff9d3a;
+      --flame-outer: #e85a1a;
+      --flame-edge: #8b2500;
+      --wick-color: #2a2016;
+      --glow-color: rgba(255, 180, 80, 0.15);
+      --smoke-color: rgba(180, 170, 160, 0.4);
+      --btn-bg: #1a1520;
+      --btn-text: #f0e4d4;
+      --btn-hover: #2a2030;
+
+      --candle-height: min(45vh, 320px);
+      --candle-width: calc(var(--candle-height) * 0.38);
+      --flame-height: calc(var(--candle-height) * 0.28);
+    }
+
+    @media (min-width: 600px) {
+      :root {
+        --candle-height: min(50vh, 400px);
+        --candle-width: calc(var(--candle-height) * 0.38);
+        --flame-height: calc(var(--candle-height) * 0.26);
+      }
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: var(--bg-deep);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient Glow */
+    .glow {
+      position: absolute;
+      width: calc(var(--candle-width) * 5);
+      height: calc(var(--candle-width) * 5);
+      border-radius: 50%;
+      background: radial-gradient(
+        circle at center,
+        rgba(255, 160, 60, 0.18) 0%,
+        rgba(255, 120, 40, 0.08) 30%,
+        rgba(200, 80, 20, 0.03) 50%,
+        transparent 70%
+      );
+      pointer-events: none;
+      transition: opacity 800ms ease-out;
+      animation: glowPulse 4s ease-in-out infinite;
+    }
+
+    .glow.extinguished {
+      opacity: 0.08;
+      animation: none;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.9; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* Candle Container */
+    .candle-container {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1;
+    }
+
+    /* Smoke Container */
+    .smoke-container {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: var(--candle-width);
+      height: calc(var(--candle-height) * 0.6);
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .smoke-particle {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle at 30% 30%,
+        rgba(220, 210, 200, 0.5),
+        rgba(160, 150, 140, 0.2)
+      );
+      opacity: 0;
+      animation: smokeRise 2.5s ease-out forwards;
+    }
+
+    @keyframes smokeRise {
+      0% {
+        opacity: 0;
+        transform: translateY(0) translateX(0) scale(0.3);
+      }
+      10% {
+        opacity: 0.6;
+      }
+      50% {
+        opacity: 0.4;
+        transform: translateY(-60px) translateX(var(--drift-x, 10px)) scale(0.8);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-120px) translateX(var(--drift-x, 10px)) scale(1.2);
+      }
+    }
+
+    /* Flame */
+    .flame-wrapper {
+      position: relative;
+      width: var(--candle-width);
+      height: calc(var(--candle-height) * 0.35);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .flame {
+      position: absolute;
+      bottom: 0;
+      width: calc(var(--candle-width) * 0.5);
+      height: var(--flame-height);
+      transform-origin: bottom center;
+      opacity: 1;
+      transition: opacity 600ms ease-out, transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      will-change: transform, opacity;
+    }
+
+    .flame.extinguished {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+
+    .flame svg {
+      width: 100%;
+      height: 100%;
+      animation: flameSway 3s ease-in-out infinite;
+      will-change: transform;
+    }
+
+    @keyframes flameSway {
+      0%, 100% { transform: translateX(0) rotate(0deg) scaleY(1); }
+      20% { transform: translateX(-2px) rotate(-1deg) scaleY(1.02); }
+      40% { transform: translateX(1px) rotate(0.5deg) scaleY(0.98); }
+      60% { transform: translateX(-1px) rotate(-0.5deg) scaleY(1.01); }
+      80% { transform: translateX(2px) rotate(1deg) scaleY(0.99); }
+    }
+
+    .flame-flicker {
+      animation: flameFlicker 1.5s ease-in-out infinite;
+    }
+
+    @keyframes flameFlicker {
+      0%, 100% { transform: scaleY(1) scaleX(1); }
+      25% { transform: scaleY(1.05) scaleX(0.97); }
+      50% { transform: scaleY(0.95) scaleX(1.02); }
+      75% { transform: scaleY(1.02) scaleX(0.98); }
+    }
+
+    .flame-color {
+      animation: flameColor 4s ease-in-out infinite;
+    }
+
+    @keyframes flameColor {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+
+    /* Wick */
+    .wick {
+      position: absolute;
+      bottom: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 14px;
+      background: linear-gradient(to top, var(--wick-color), #3a3025);
+      border-radius: 2px;
+      z-index: 1;
+    }
+
+    .wick-tip {
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 40%, #ff6a1a, #cc4400);
+      opacity: 1;
+      transition: opacity 400ms ease-out 200ms, background 300ms ease-out;
+      box-shadow: 0 0 8px 2px rgba(255, 100, 40, 0.6);
+    }
+
+    .wick-tip.extinguished {
+      opacity: 0;
+      background: var(--wick-color);
+      box-shadow: none;
+    }
+
+    /* Candle Body */
+    .candle-body {
+      position: relative;
+      width: var(--candle-width);
+      height: var(--candle-height);
+      background: linear-gradient(
+        105deg,
+        var(--candle-wax) 0%,
+        var(--candle-mid) 40%,
+        var(--candle-shadow) 100%
+      );
+      border-radius: 6px 6px 8px 8px;
+      box-shadow:
+        inset -8px 0 20px rgba(0,0,0,0.08),
+        inset 2px 0 8px rgba(255,255,255,0.3),
+        0 8px 30px rgba(0,0,0,0.5);
+      overflow: visible;
+    }
+
+    /* Melt Pool */
+    .melt-pool {
+      position: absolute;
+      top: -2px;
+      left: 5%;
+      width: 90%;
+      height: 10px;
+      background: linear-gradient(
+        to bottom,
+        var(--candle-wax) 0%,
+        #f0dcc4 50%,
+        var(--candle-shadow) 100%
+      );
+      border-radius: 50%;
+      box-shadow:
+        inset 0 2px 6px rgba(255,255,255,0.4),
+        0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Wax Drips */
+    .wax-drip {
+      position: absolute;
+      background: linear-gradient(
+        to bottom,
+        var(--candle-wax),
+        var(--candle-shadow)
+      );
+      border-radius: 0 0 50% 50%;
+    }
+
+    .drip-1 {
+      top: 0;
+      left: 15%;
+      width: 12px;
+      height: 35px;
+      animation: dripFlow 20s ease-in-out infinite;
+    }
+
+    .drip-2 {
+      top: 0;
+      right: 20%;
+      width: 10px;
+      height: 55px;
+      animation: dripFlow 25s ease-in-out infinite 5s;
+    }
+
+    .drip-3 {
+      top: 0;
+      left: 55%;
+      width: 8px;
+      height: 28px;
+      animation: dripFlow 18s ease-in-out infinite 10s;
+    }
+
+    @keyframes dripFlow {
+      0% {
+        transform: translateY(-100%) scaleY(0.5);
+        opacity: 0;
+      }
+      5% {
+        transform: translateY(-100%) scaleY(1);
+        opacity: 1;
+      }
+      80% {
+        transform: translateY(0%) scaleY(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(0%) scaleY(1);
+        opacity: 1;
+      }
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      z-index: 10;
+    }
+
+    .btn {
+      padding: 12px 28px;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--btn-text);
+      background: var(--btn-bg);
+      border: 1px solid rgba(255, 240, 220, 0.1);
+      border-radius: 30px;
+      cursor: pointer;
+      transition:
+        background 200ms ease,
+        transform 150ms ease,
+        box-shadow 200ms ease;
+      min-width: 120px;
+      outline: none;
+    }
+
+    .btn:hover {
+      background: var(--btn-hover);
+      box-shadow: 0 4px 20px rgba(255, 180, 80, 0.15);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn:focus-visible {
+      box-shadow: 0 0 0 2px var(--bg-deep), 0 0 0 4px var(--flame-mid);
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      .flame svg,
+      .flame-flicker,
+      .flame-color,
+      .glow {
+        animation: none;
+      }
+
+      .wax-drip {
+        animation: none;
+      }
+
+      .flame {
+        transition: none;
+      }
+
+      .glow {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+
+  <div class="candle-container">
+    <div class="smoke-container" id="smokeContainer"></div>
+
+    <div class="flame-wrapper">
+      <div class="flame" id="flame">
+        <svg viewBox="0 0 60 100" preserveAspectRatio="xMidYMax meet">
+          <defs>
+            <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="#fff4d6"/>
+              <stop offset="25%" stop-color="#fff4d6"/>
+              <stop offset="45%" stop-color="#ffb84d"/>
+              <stop offset="65%" stop-color="#ff8c2a"/>
+              <stop offset="85%" stop-color="#e85a1a"/>
+              <stop offset="100%" stop-color="#8b2500"/>
+            </linearGradient>
+            <filter id="flameGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <g filter="url(#flameGlow)" class="flame-color">
+            <path
+              class="flame-flicker"
+              d="M30,100 C30,100 8,70 8,45 C8,25 18,5 30,0 C42,5 52,25 52,45 C52,70 30,100 30,100 Z"
+              fill="url(#flameGrad)"
+            />
+            <ellipse cx="30" cy="55" rx="8" ry="15" fill="rgba(255,244,214,0.4)" class="flame-flicker"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="wick" id="wick">
+        <div class="wick-tip" id="wickTip"></div>
+      </div>
+    </div>
+
+    <div class="candle-body">
+      <div class="melt-pool"></div>
+      <div class="wax-drip drip-1"></div>
+      <div class="wax-drip drip-2"></div>
+      <div class="wax-drip drip-3"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="toggleBtn">Put Out</button>
+  </div>
+
+  <script>
+    (function() {
+      const flame = document.getElementById('flame');
+      const wickTip = document.getElementById('wickTip');
+      const glow = document.querySelector('.glow');
+      const toggleBtn = document.getElementById('toggleBtn');
+      const smokeContainer = document.getElementById('smokeContainer');
+
+      let state = 'burning';
+      let isTransitioning = false;
+      let smokeDebounce = null;
+
+      function toggleCandle() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+
+        if (state === 'burning') {
+          extinguish();
+        } else {
+          light();
+        }
+      }
+
+      function extinguish() {
+        flame.classList.add('extinguished');
+        wickTip.classList.add('extinguished');
+        glow.classList.add('extinguished');
+
+        spawnSmokeParticles();
+
+        toggleBtn.textContent = 'Light Candle';
+        state = 'extinguished';
+
+        setTimeout(() => {
+          isTransitioning = false;
+        }, 700);
+      }
+
+      function light() {
+        flame.classList.remove('extinguished');
+        wickTip.classList.remove('extinguished');
+        glow.classList.remove('extinguished');
+
+        toggleBtn.textContent = 'Put Out';
+        state = 'burning';
+
+        setTimeout(() => {
+          isTransitioning = false;
+        }, 600);
+      }
+
+      function spawnSmokeParticles() {
+        const count = 10;
+        const candleWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--candle-width')) || 100;
+
+        for (let i = 0; i < count; i++) {
+          setTimeout(() => {
+            const particle = document.createElement('div');
+            particle.className = 'smoke-particle';
+
+            const size = 8 + Math.random() * 16;
+            const driftX = (Math.random() - 0.5) * 60;
+            const startX = (Math.random() - 0.5) * 40;
+
+            particle.style.cssText = `
+              width: ${size}px;
+              height: ${size}px;
+              left: calc(50% + ${startX}px);
+              bottom: ${40 + Math.random() * 20}px;
+              --drift-x: ${driftX}px;
+              animation-duration: ${2 + Math.random() * 1}s;
+            `;
+
+            smokeContainer.appendChild(particle);
+
+            setTimeout(() => {
+              particle.remove();
+            }, 3000);
+          }, i * 120);
+        }
+      }
+
+      toggleBtn.addEventListener('click', toggleCandle);
+
+      // Keyboard accessibility
+      toggleBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleCandle();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
