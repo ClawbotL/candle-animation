@@ -2,12 +2,15 @@ const { chromium } = require('playwright');
 const path = require('path');
 
 (async () => {
-  const browser = await chromium.launch();
+  // Try with regular chrome-headless-shell instead
+  const browser = await chromium.launch({
+    executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
   const filePath = 'file://' + path.resolve(__dirname, 'index.html');
   
   const results = [];
   
-  // Helper to report test result
   const test = (name, passed, details = '') => {
     results.push({ name, passed, details });
     console.log(`${passed ? '✅ PASS' : '❌ FAIL'}: ${name}${details ? '\n   ' + details : ''}`);
@@ -72,14 +75,12 @@ const path = require('path');
 
   // Test 5: Smoke particles are spawned after extinguishing
   try {
-    // First, ensure candle is burning
     const isBurning = await page.$eval('#flame', el => !el.classList.contains('extinguished'));
     if (!isBurning) {
       await page.click('#toggleBtn');
       await page.waitForTimeout(800);
     }
     
-    // Extinguish and check for smoke
     await page.click('#toggleBtn');
     await page.waitForTimeout(300);
     const smokeCount = await page.$$eval('#smokeContainer .smoke-particle', els => els.length);
@@ -132,7 +133,6 @@ const path = require('path');
 
   await browser.close();
 
-  // Summary
   const passed = results.filter(r => r.passed).length;
   const failed = results.filter(r => !r.passed).length;
   console.log('\n═══════════════════════════════════════');

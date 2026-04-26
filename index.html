@@ -16,7 +16,7 @@
     }
 
     :root {
-      --bg-deep: #0d0a0e;
+      --bg-deep: #0f0d12;
       --candle-wax: #f5e6d3;
       --candle-shadow: #d4c4b0;
       --candle-mid: #e8d5be;
@@ -57,18 +57,42 @@
       position: relative;
     }
 
-    /* Ambient Glow */
+    /* Background warm gradient (candlelight reflection) */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(
+          ellipse 80% 50% at 50% 60%,
+          rgba(255,180,80,0.06) 0%,
+          transparent 50%
+        ),
+        radial-gradient(
+          ellipse 60% 40% at 50% 40%,
+          rgba(255,140,40,0.04) 0%,
+          transparent 40%
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Ambient Glow - Pulsing */
     .glow {
       position: absolute;
-      width: calc(var(--candle-width) * 5);
-      height: calc(var(--candle-width) * 5);
+      width: calc(var(--candle-width) * 6);
+      height: calc(var(--candle-width) * 6);
       border-radius: 50%;
       background: radial-gradient(
         circle at center,
-        rgba(255, 160, 60, 0.18) 0%,
-        rgba(255, 120, 40, 0.08) 30%,
-        rgba(200, 80, 20, 0.03) 50%,
-        transparent 70%
+        rgba(255,180,80,0.25) 0%,
+        rgba(255,140,50,0.12) 25%,
+        rgba(230,90,20,0.06) 45%,
+        rgba(200,60,10,0.02) 60%,
+        transparent 75%
       );
       pointer-events: none;
       transition: opacity 800ms ease-out;
@@ -81,8 +105,47 @@
     }
 
     @keyframes glowPulse {
-      0%, 100% { opacity: 0.9; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.05); }
+      0%, 100% { 
+        opacity: 0.85; 
+        transform: scale(1) brightness(1);
+        filter: saturate(1);
+      }
+      50% { 
+        opacity: 1; 
+        transform: scale(1.08) brightness(1.1);
+        filter: saturate(1.1);
+      }
+    }
+
+    /* Flickering shadow on surface below candle */
+    .candle-shadow {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120%;
+      height: 30px;
+      background: radial-gradient(
+        ellipse at center,
+        rgba(0,0,0,0.5) 0%,
+        rgba(0,0,0,0.2) 40%,
+        transparent 70%
+      );
+      animation: shadowFlicker 2s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .candle-shadow.extinguished {
+      opacity: 0.1;
+      animation: none;
+    }
+
+    @keyframes shadowFlicker {
+      0%, 100% { opacity: 0.7; transform: translateX(-50%) scaleX(1); }
+      25% { opacity: 0.9; transform: translateX(-48%) scaleX(1.05); }
+      50% { opacity: 0.6; transform: translateX(-52%) scaleX(0.95); }
+      75% { opacity: 0.85; transform: translateX(-49%) scaleX(1.02); }
     }
 
     /* Candle Container */
@@ -106,37 +169,48 @@
       overflow: visible;
     }
 
+    /* Smoke Particle - Volumetric & Turbulent */
     .smoke-particle {
       position: absolute;
       border-radius: 50%;
       background: radial-gradient(
-        circle at 30% 30%,
-        rgba(220, 210, 200, 0.5),
-        rgba(160, 150, 140, 0.2)
+        circle at 40% 40%,
+        rgba(200,190,180,0.6),
+        rgba(160,150,140,0.3) 50%,
+        rgba(120,110,100,0.1)
       );
       opacity: 0;
-      animation: smokeRise 2.5s ease-out forwards;
+      animation: smokeRise 3.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
 
     @keyframes smokeRise {
       0% {
         opacity: 0;
-        transform: translateY(0) translateX(0) scale(0.3);
+        transform: translateY(0) translateX(0) scale(0.4) rotate(0deg);
+        filter: blur(0px);
       }
-      10% {
-        opacity: 0.6;
+      15% {
+        opacity: 0.7;
+        filter: blur(1px);
       }
-      50% {
-        opacity: 0.4;
-        transform: translateY(-60px) translateX(var(--drift-x, 10px)) scale(0.8);
+      40% {
+        opacity: 0.5;
+        transform: translateY(-40px) translateX(calc(var(--drift-x, 0px) * 0.5)) scale(0.7) rotate(10deg);
+        filter: blur(2px);
+      }
+      70% {
+        opacity: 0.3;
+        transform: translateY(-80px) translateX(calc(var(--drift-x, 0px) * 1.2)) scale(1) rotate(-5deg);
+        filter: blur(3px);
       }
       100% {
         opacity: 0;
-        transform: translateY(-120px) translateX(var(--drift-x, 10px)) scale(1.2);
+        transform: translateY(-140px) translateX(var(--drift-x, 0px)) scale(1.3) rotate(5deg);
+        filter: blur(4px);
       }
     }
 
-    /* Flame */
+    /* Flame Wrapper with Glow */
     .flame-wrapper {
       position: relative;
       width: var(--candle-width);
@@ -147,6 +221,32 @@
       z-index: 2;
     }
 
+    /* Heat shimmer above flame */
+    .heat-shimmer {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 40px;
+      background: linear-gradient(to top, transparent, rgba(255,200,100,0.03));
+      filter: blur(2px);
+      animation: shimmer 1.5s ease-in-out infinite;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 600ms ease-out;
+    }
+
+    .heat-shimmer.extinguished {
+      opacity: 0;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.3; transform: translateX(-50%) skewX(0deg); }
+      50% { opacity: 0.6; transform: translateX(-50%) skewX(3deg); }
+    }
+
+    /* Flame - Multi-Layer */
     .flame {
       position: absolute;
       bottom: 0;
@@ -163,121 +263,233 @@
       transform: scale(0.3);
     }
 
-    .flame svg {
+    /* Glow wrapper with 5-layer bloom */
+    .flame-glow {
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      height: calc(var(--flame-height) + 20px);
+      border-radius: 50%;
+      box-shadow: 
+        0 0 10px 2px rgba(255,200,100,0.8),
+        0 0 30px 10px rgba(255,150,50,0.5),
+        0 0 60px 20px rgba(255,100,30,0.3),
+        0 0 100px 40px rgba(200,60,20,0.15),
+        0 0 150px 60px rgba(150,40,10,0.08);
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 600ms ease-out;
+    }
+
+    .flame-glow.extinguished {
+      opacity: 0;
+    }
+
+    /* Outer flame (orange-red) */
+    .flame-outer {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
       width: 100%;
       height: 100%;
-      animation: flameSway 3s ease-in-out infinite;
       will-change: transform;
+      animation: flameSway 2.5s ease-in-out infinite, flameFlicker 0.8s ease-in-out infinite;
     }
 
+    .flame-outer svg {
+      width: 100%;
+      height: 100%;
+      filter: blur(0.5px);
+    }
+
+    .flame-outer path {
+      fill: url(#outerFlameGrad);
+    }
+
+    /* Mid flame (warm yellow-orange) */
+    .flame-mid {
+      position: absolute;
+      bottom: 10%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.6);
+      width: 100%;
+      height: 100%;
+      mix-blend-mode: screen;
+      will-change: transform;
+      animation: flameSway 2.5s ease-in-out infinite 0.1s, flameFlicker 0.8s ease-in-out infinite 0.05s;
+    }
+
+    .flame-mid svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .flame-mid path {
+      fill: url(#midFlameGrad);
+    }
+
+    /* Inner core (white-blue tint) */
+    .flame-core {
+      position: absolute;
+      bottom: 5%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.3);
+      width: 100%;
+      height: 100%;
+      will-change: transform;
+      animation: flameSway 2.5s ease-in-out infinite 0.15s, flameFlicker 0.8s ease-in-out infinite 0.1s;
+    }
+
+    .flame-core svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .flame-core path {
+      fill: url(#coreFlameGrad);
+    }
+
+    /* Organic multi-axis sway */
     @keyframes flameSway {
-      0%, 100% { transform: translateX(0) rotate(0deg) scaleY(1); }
-      20% { transform: translateX(-2px) rotate(-1deg) scaleY(1.02); }
-      40% { transform: translateX(1px) rotate(0.5deg) scaleY(0.98); }
-      60% { transform: translateX(-1px) rotate(-0.5deg) scaleY(1.01); }
-      80% { transform: translateX(2px) rotate(1deg) scaleY(0.99); }
+      0% { transform: translateX(0) translateY(0) rotate(0deg) scaleY(1) scaleX(1); }
+      15% { transform: translateX(-3px) translateY(-1px) rotate(-1.5deg) scaleY(1.03) scaleX(0.97); }
+      30% { transform: translateX(2px) translateY(-2px) rotate(1deg) scaleY(0.97) scaleX(1.02); }
+      45% { transform: translateX(-1px) translateY(-1px) rotate(-0.5deg) scaleY(1.02) scaleX(0.99); }
+      60% { transform: translateX(3px) translateY(0) rotate(1.5deg) scaleY(0.98) scaleX(1.01); }
+      75% { transform: translateX(-2px) translateY(-1px) rotate(-1deg) scaleY(1.01) scaleX(0.98); }
+      100% { transform: translateX(0) translateY(0) rotate(0deg) scaleY(1) scaleX(1); }
     }
 
-    .flame-flicker {
-      animation: flameFlicker 1.5s ease-in-out infinite;
-    }
-
+    /* Flicker micro-animation */
     @keyframes flameFlicker {
       0%, 100% { transform: scaleY(1) scaleX(1); }
-      25% { transform: scaleY(1.05) scaleX(0.97); }
-      50% { transform: scaleY(0.95) scaleX(1.02); }
-      75% { transform: scaleY(1.02) scaleX(0.98); }
+      10% { transform: scaleY(1.08) scaleX(0.94); }
+      20% { transform: scaleY(0.95) scaleX(1.04); }
+      30% { transform: scaleY(1.05) scaleX(0.96); }
+      40% { transform: scaleY(0.97) scaleX(1.02); }
+      50% { transform: scaleY(1.03) scaleX(0.98); }
+      60% { transform: scaleY(0.96) scaleX(1.03); }
+      70% { transform: scaleY(1.06) scaleX(0.95); }
+      80% { transform: scaleY(0.98) scaleX(1.01); }
+      90% { transform: scaleY(1.02) scaleX(0.99); }
     }
 
-    .flame-color {
-      animation: flameColor 4s ease-in-out infinite;
-    }
-
-    @keyframes flameColor {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.85; }
-    }
-
-    /* Wick */
+    /* Wick - Realistic Charred Look */
     .wick {
       position: absolute;
       bottom: -12px;
       left: 50%;
       transform: translateX(-50%);
-      width: 4px;
-      height: 14px;
-      background: linear-gradient(to top, var(--wick-color), #3a3025);
-      border-radius: 2px;
+      width: 3px;
+      height: 16px;
+      background: linear-gradient(
+        to top,
+        #1a1510 0%,
+        #2a2015 40%,
+        #3a3025 70%,
+        #4a4035 100%
+      );
+      border-radius: 1px;
       z-index: 1;
     }
 
     .wick-tip {
       position: absolute;
-      top: -6px;
+      top: -5px;
       left: 50%;
       transform: translateX(-50%);
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
-      background: radial-gradient(circle at 40% 40%, #ff6a1a, #cc4400);
+      background: radial-gradient(
+        circle at 40% 40%,
+        #ff8c2a 0%,
+        #e85a1a 50%,
+        #cc4400 100%
+      );
       opacity: 1;
       transition: opacity 400ms ease-out 200ms, background 300ms ease-out;
-      box-shadow: 0 0 8px 2px rgba(255, 100, 40, 0.6);
+      box-shadow: 
+        0 0 6px 2px rgba(255,140,40,0.8),
+        0 0 12px 4px rgba(255,100,20,0.4),
+        0 0 20px 6px rgba(255,80,10,0.2);
+      animation: emberGlow 1s ease-in-out infinite;
     }
 
     .wick-tip.extinguished {
       opacity: 0;
       background: var(--wick-color);
       box-shadow: none;
+      animation: none;
     }
 
-    /* Candle Body */
+    @keyframes emberGlow {
+      0%, 100% { box-shadow: 0 0 6px 2px rgba(255,140,40,0.8), 0 0 12px 4px rgba(255,100,20,0.4); }
+      50% { box-shadow: 0 0 8px 3px rgba(255,150,50,0.9), 0 0 16px 6px rgba(255,110,25,0.5); }
+    }
+
+    /* Candle Body - Realistic Wax Texture */
     .candle-body {
       position: relative;
       width: var(--candle-width);
       height: var(--candle-height);
-      background: linear-gradient(
-        105deg,
-        var(--candle-wax) 0%,
-        var(--candle-mid) 40%,
-        var(--candle-shadow) 100%
-      );
+      background: 
+        /* Noise texture overlay */
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"),
+        /* Main wax gradient */
+        linear-gradient(
+          105deg,
+          #f5e6d3 0%,
+          #ede0cc 20%,
+          #e8d5be 40%,
+          #d9c4ab 60%,
+          #c9b29a 80%,
+          #b8a089 100%
+        );
       border-radius: 6px 6px 8px 8px;
       box-shadow:
-        inset -8px 0 20px rgba(0,0,0,0.08),
-        inset 2px 0 8px rgba(255,255,255,0.3),
-        0 8px 30px rgba(0,0,0,0.5);
+        inset -12px 0 25px rgba(0,0,0,0.1),
+        inset 3px 0 10px rgba(255,255,255,0.25),
+        0 15px 50px rgba(0,0,0,0.6),
+        0 5px 20px rgba(0,0,0,0.4);
       overflow: visible;
     }
 
-    /* Melt Pool */
+    /* Melt Pool at top */
     .melt-pool {
       position: absolute;
-      top: -2px;
-      left: 5%;
-      width: 90%;
-      height: 10px;
+      top: -4px;
+      left: 3%;
+      width: 94%;
+      height: 14px;
       background: linear-gradient(
         to bottom,
-        var(--candle-wax) 0%,
-        #f0dcc4 50%,
-        var(--candle-shadow) 100%
+        rgba(255,248,235,0.95) 0%,
+        rgba(240,220,190,0.9) 40%,
+        rgba(225,205,175,0.85) 70%,
+        rgba(210,190,160,0.8) 100%
       );
       border-radius: 50%;
       box-shadow:
-        inset 0 2px 6px rgba(255,255,255,0.4),
-        0 2px 8px rgba(0,0,0,0.15);
+        inset 0 3px 8px rgba(255,255,255,0.5),
+        inset 0 -2px 6px rgba(0,0,0,0.1),
+        0 3px 12px rgba(0,0,0,0.2);
     }
 
-    /* Wax Drips */
+    /* Wax Drips - look like cooled hardened wax */
     .wax-drip {
       position: absolute;
       background: linear-gradient(
         to bottom,
-        var(--candle-wax),
-        var(--candle-shadow)
+        #e8d5be 0%,
+        #d4c4b0 50%,
+        #c4b4a0 100%
       );
       border-radius: 0 0 50% 50%;
+      box-shadow: inset -2px 0 4px rgba(0,0,0,0.1);
     }
 
     .drip-1 {
@@ -323,6 +535,52 @@
       }
     }
 
+    /* Ambient dust particles floating in light */
+    .dust-particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: radial-gradient(circle, rgba(255,220,150,0.8), transparent);
+      border-radius: 50%;
+      animation: dustFloat 8s ease-in-out infinite;
+      will-change: transform, opacity;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 600ms ease-out;
+    }
+
+    .dust-particle.visible {
+      opacity: 1;
+    }
+
+    .dust-particle:nth-child(1) { left: 45%; top: 30%; animation-delay: 0s; }
+    .dust-particle:nth-child(2) { left: 55%; top: 40%; animation-delay: 1.5s; }
+    .dust-particle:nth-child(3) { left: 40%; top: 35%; animation-delay: 3s; }
+    .dust-particle:nth-child(4) { left: 60%; top: 25%; animation-delay: 4.5s; }
+    .dust-particle:nth-child(5) { left: 50%; top: 45%; animation-delay: 2s; }
+    .dust-particle:nth-child(6) { left: 42%; top: 50%; animation-delay: 5.5s; }
+    .dust-particle:nth-child(7) { left: 58%; top: 38%; animation-delay: 1s; }
+    .dust-particle:nth-child(8) { left: 48%; top: 28%; animation-delay: 3.5s; }
+
+    @keyframes dustFloat {
+      0%, 100% { 
+        transform: translate(0, 0) scale(1); 
+        opacity: 0.3;
+      }
+      25% { 
+        transform: translate(15px, -20px) scale(1.2); 
+        opacity: 0.6;
+      }
+      50% { 
+        transform: translate(-10px, -40px) scale(0.8); 
+        opacity: 0.4;
+      }
+      75% { 
+        transform: translate(20px, -60px) scale(1.1); 
+        opacity: 0.5;
+      }
+    }
+
     /* Controls */
     .controls {
       display: flex;
@@ -364,14 +622,17 @@
 
     /* Reduced Motion */
     @media (prefers-reduced-motion: reduce) {
-      .flame svg,
-      .flame-flicker,
-      .flame-color,
-      .glow {
+      .flame-outer,
+      .flame-mid,
+      .flame-core,
+      .flame-glow {
         animation: none;
       }
 
-      .wax-drip {
+      .wax-drip,
+      .dust-particle,
+      .heat-shimmer,
+      .candle-shadow {
         animation: none;
       }
 
@@ -382,44 +643,77 @@
       .glow {
         transition: none;
       }
+
+      .dust-particle {
+        opacity: 0.5;
+      }
     }
   </style>
 </head>
 <body>
   <div class="glow"></div>
+  <div class="candle-shadow"></div>
 
   <div class="candle-container">
+    <!-- Dust particles -->
+    <div class="dust-particle"></div>
+    <div class="dust-particle"></div>
+    <div class="dust-particle"></div>
+    <div class="dust-particle"></div>
+    <div class="dust-particle"></div>
+    <div class="dust-particle"></div>
+    <div class="dust-particle"></div>
+    <div class="dust-particle"></div>
+
     <div class="smoke-container" id="smokeContainer"></div>
 
     <div class="flame-wrapper">
+      <div class="heat-shimmer"></div>
+      
       <div class="flame" id="flame">
-        <svg viewBox="0 0 60 100" preserveAspectRatio="xMidYMax meet">
-          <defs>
-            <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stop-color="#fff4d6"/>
-              <stop offset="25%" stop-color="#fff4d6"/>
-              <stop offset="45%" stop-color="#ffb84d"/>
-              <stop offset="65%" stop-color="#ff8c2a"/>
-              <stop offset="85%" stop-color="#e85a1a"/>
-              <stop offset="100%" stop-color="#8b2500"/>
-            </linearGradient>
-            <filter id="flameGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur"/>
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-          <g filter="url(#flameGlow)" class="flame-color">
-            <path
-              class="flame-flicker"
-              d="M30,100 C30,100 8,70 8,45 C8,25 18,5 30,0 C42,5 52,25 52,45 C52,70 30,100 30,100 Z"
-              fill="url(#flameGrad)"
-            />
-            <ellipse cx="30" cy="55" rx="8" ry="15" fill="rgba(255,244,214,0.4)" class="flame-flicker"/>
-          </g>
-        </svg>
+        <div class="flame-glow"></div>
+        
+        <!-- Outer flame (orange-red) -->
+        <div class="flame-outer">
+          <svg viewBox="0 0 60 100" preserveAspectRatio="xMidYMax meet">
+            <defs>
+              <linearGradient id="outerFlameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stop-color="#e85a1a"/>
+                <stop offset="50%" stop-color="#ff6b2a"/>
+                <stop offset="100%" stop-color="#ff9d3a"/>
+              </linearGradient>
+            </defs>
+            <path d="M30,100 C30,100 5,65 10,40 C15,20 25,5 30,0 C35,5 45,20 50,40 C55,65 30,100 30,100 Z"/>
+          </svg>
+        </div>
+        
+        <!-- Mid flame (warm yellow-orange) -->
+        <div class="flame-mid">
+          <svg viewBox="0 0 60 100" preserveAspectRatio="xMidYMax meet">
+            <defs>
+              <linearGradient id="midFlameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stop-color="#ffb84d"/>
+                <stop offset="50%" stop-color="#ffd166"/>
+                <stop offset="100%" stop-color="#fff4d6"/>
+              </linearGradient>
+            </defs>
+            <path d="M30,100 C30,100 5,65 10,40 C15,20 25,5 30,0 C35,5 45,20 50,40 C55,65 30,100 30,100 Z"/>
+          </svg>
+        </div>
+        
+        <!-- Inner core (white-blue tint) -->
+        <div class="flame-core">
+          <svg viewBox="0 0 60 100" preserveAspectRatio="xMidYMax meet">
+            <defs>
+              <radialGradient id="coreFlameGrad" cx="50%" cy="70%" r="50%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="60%" stop-color="#e8f4ff"/>
+                <stop offset="100%" stop-color="#fff4d6"/>
+              </radialGradient>
+            </defs>
+            <path d="M30,100 C30,100 5,65 10,40 C15,20 25,5 30,0 C35,5 45,20 50,40 C55,65 30,100 30,100 Z"/>
+          </svg>
+        </div>
       </div>
 
       <div class="wick" id="wick">
@@ -442,8 +736,12 @@
   <script>
     (function() {
       const flame = document.getElementById('flame');
+      const flameGlow = document.querySelector('.flame-glow');
       const wickTip = document.getElementById('wickTip');
       const glow = document.querySelector('.glow');
+      const candleShadow = document.querySelector('.candle-shadow');
+      const heatShimmer = document.querySelector('.heat-shimmer');
+      const dustParticles = document.querySelectorAll('.dust-particle');
       const toggleBtn = document.getElementById('toggleBtn');
       const smokeContainer = document.getElementById('smokeContainer');
 
@@ -464,8 +762,13 @@
 
       function extinguish() {
         flame.classList.add('extinguished');
+        flameGlow.classList.add('extinguished');
         wickTip.classList.add('extinguished');
         glow.classList.add('extinguished');
+        candleShadow.classList.add('extinguished');
+        heatShimmer.classList.add('extinguished');
+        
+        dustParticles.forEach(p => p.classList.remove('visible'));
 
         spawnSmokeParticles();
 
@@ -479,8 +782,15 @@
 
       function light() {
         flame.classList.remove('extinguished');
+        flameGlow.classList.remove('extinguished');
         wickTip.classList.remove('extinguished');
         glow.classList.remove('extinguished');
+        candleShadow.classList.remove('extinguished');
+        heatShimmer.classList.remove('extinguished');
+        
+        setTimeout(() => {
+          dustParticles.forEach(p => p.classList.add('visible'));
+        }, 300);
 
         toggleBtn.textContent = 'Put Out';
         state = 'burning';
@@ -491,33 +801,30 @@
       }
 
       function spawnSmokeParticles() {
-        const count = 10;
-        const candleWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--candle-width')) || 100;
+        const count = 15 + Math.floor(Math.random() * 5);
 
         for (let i = 0; i < count; i++) {
           setTimeout(() => {
             const particle = document.createElement('div');
             particle.className = 'smoke-particle';
-
-            const size = 8 + Math.random() * 16;
-            const driftX = (Math.random() - 0.5) * 60;
-            const startX = (Math.random() - 0.5) * 40;
-
+            
+            const size = 12 + Math.random() * 20;
+            const driftX = (Math.random() - 0.5) * 80;
+            const startX = (Math.random() - 0.5) * 50;
+            const duration = 3 + Math.random() * 1.5;
+            
             particle.style.cssText = `
               width: ${size}px;
               height: ${size}px;
               left: calc(50% + ${startX}px);
-              bottom: ${40 + Math.random() * 20}px;
+              bottom: ${35 + Math.random() * 25}px;
               --drift-x: ${driftX}px;
-              animation-duration: ${2 + Math.random() * 1}s;
+              animation-duration: ${duration}s;
             `;
-
+            
             smokeContainer.appendChild(particle);
-
-            setTimeout(() => {
-              particle.remove();
-            }, 3000);
-          }, i * 120);
+            setTimeout(() => particle.remove(), (duration + 0.5) * 1000);
+          }, i * 100);
         }
       }
 
@@ -530,6 +837,9 @@
           toggleCandle();
         }
       });
+
+      // Initial dust particle visibility
+      dustParticles.forEach(p => p.classList.add('visible'));
     })();
   </script>
 </body>
