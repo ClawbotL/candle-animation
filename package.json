@@ -1,0 +1,16 @@
+{
+  "name": "candle-animation",
+  "version": "1.0.0",
+  "description": "An elegant, animated candle with realistic flame, wax drips, and ambient glow — built with pure HTML, CSS, and JavaScript.",
+  "main": "test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.59.1"
+  }
+}
