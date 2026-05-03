@@ -23,6 +23,15 @@
       --glow-warm: rgba(255, 175, 80, 0.18);
     }
 
+    /* Flame turbulence effect */
+    @keyframes turbulenceAnim {
+      0% { baseFrequency: 0.01 0.02; }
+      25% { baseFrequency: 0.02 0.04; }
+      50% { baseFrequency: 0.015 0.03; }
+      75% { baseFrequency: 0.025 0.035; }
+      100% { baseFrequency: 0.01 0.02; }
+    }
+
     body {
       min-height: 100vh;
       min-height: 100dvh;
@@ -78,6 +87,23 @@
         ),
         linear-gradient(to bottom, #0f0c08 0%, #0c0a07 100%);
       z-index: 0;
+    }
+
+    /* Dynamic candle light cast on holder */
+    .holder-base::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% -20%, rgba(255,180,80,0.18), transparent 60%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: holderGlow 2.5s ease-in-out infinite;
+    }
+
+    @keyframes holderGlow {
+      0%,100% { opacity: 0.8; transform: scaleX(1); }
+      30% { opacity: 1; transform: scaleX(1.05); }
+      70% { opacity: 0.6; transform: scaleX(0.95); }
     }
 
     /* ─── Candle Holder ─── */
@@ -253,12 +279,12 @@
       mix-blend-mode: screen;
     }
 
-    /* Enhanced flame layers */
+    /* Enhanced flame layers with turbulence */
     .fl-layer-1 {
       width: 76px;
       height: 140px;
       animation: flSway 3.1s ease-in-out infinite, flFlicker 0.68s ease-in-out infinite;
-      filter: blur(0.8px);
+      filter: blur(0.8px) url(#flameTurbulence);
       opacity: 0.52;
       z-index: 1;
     }
@@ -268,7 +294,7 @@
       height: 126px;
       bottom: 0;
       animation: flSway 2.7s ease-in-out infinite 0.07s, flFlicker 0.62s ease-in-out infinite 0.035s;
-      filter: blur(0.35px);
+      filter: blur(0.35px) url(#flameTurbulence);
       opacity: 0.82;
       z-index: 2;
     }
@@ -279,6 +305,7 @@
       bottom: 0;
       animation: flSway 2.4s ease-in-out infinite 0.14s, flFlicker 0.58s ease-in-out infinite 0.075s;
       opacity: 0.94;
+      filter: url(#flameTurbulence);
       z-index: 3;
     }
 
@@ -287,6 +314,7 @@
       height: 82px;
       bottom: 2px;
       animation: flSway 2.1s ease-in-out infinite 0.19s, flFlicker 0.52s ease-in-out infinite 0.115s;
+      filter: url(#flameTurbulence);
       z-index: 4;
     }
 
@@ -296,7 +324,27 @@
       bottom: 0;
       animation: flSway 1.7s ease-in-out infinite 0.24s, flFlicker 0.42s ease-in-out infinite 0.045s;
       opacity: 0.92;
+      filter: url(#flameTurbulence);
       z-index: 5;
+    }
+
+    /* Heat haze style */
+    .heat-haze {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 300px;
+      filter: url(#heatHaze);
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.15;
+      transition: opacity 500ms ease;
+    }
+
+    .heat-haze.extinguished {
+      opacity: 0;
     }
 
     @keyframes flSway {
@@ -613,11 +661,35 @@
       animation: dripAnim 24s ease-in-out infinite 13s;
     }
 
+    .drip-6 {
+      top: 0;
+      right: 26%;
+      width: 9px;
+      height: 72px;
+      animation: dripAnim 30s ease-in-out infinite 2s;
+    }
+
+    .drip-7 {
+      top: 0;
+      left: 62%;
+      width: 6px;
+      height: 38px;
+      animation: dripAnim 18s ease-in-out infinite 9s;
+    }
+
+    .drip-8 {
+      top: 0;
+      right: 58%;
+      width: 4px;
+      height: 22px;
+      animation: dripAnim 28s ease-in-out infinite 15s;
+    }
+
     @keyframes dripAnim {
       0%   { transform: translateY(-100%) scaleY(0.35); opacity: 0; }
       5%   { transform: translateY(-100%) scaleY(1); opacity: 1; }
-      80%  { transform: translateY(0%) scaleY(1); opacity: 1; }
-      100% { transform: translateY(0%) scaleY(1); opacity: 1; }
+      98%  { transform: translateY(20px) scaleY(1.1); opacity: 1; }
+      100% { transform: translateY(22px) scaleY(1.1); opacity: 1; }
     }
 
     /* ─── Dust motes in candlelight ─── */
@@ -743,7 +815,20 @@
       <feTurbulence baseFrequency="0.7" numOctaves="3" stitchTiles="stitch" />
       <feColorMatrix type="saturate" values="0" />
     </filter>
+    <filter id="flameTurbulence">
+      <feTurbulence id="turb" baseFrequency="0.01 0.02" numOctaves="2" seed="1" />
+      <feDisplacementMap in="SourceGraphic" scale="8" />
+    </filter>
+    <filter id="heatHaze">
+      <feTurbulence baseFrequency="0.01 0.03" numOctaves="1" seed="2">
+        <animate attributeName="baseFrequency" values="0.01 0.03;0.02 0.05;0.01 0.03" dur="3s" repeatCount="indefinite" />
+      </feTurbulence>
+      <feDisplacementMap in="BackgroundImage" scale="3" />
+    </filter>
   </svg>
+
+  <!-- Heat haze above flame -->
+  <div class="heat-haze" id="heatHaze"></div>
 
   <div class="surface"></div>
   <div class="candle-flicker-shadow" id="candleShadow"></div>
@@ -860,6 +945,9 @@
       <div class="wax-drip drip-3"></div>
       <div class="wax-drip drip-4"></div>
       <div class="wax-drip drip-5"></div>
+      <div class="wax-drip drip-6"></div>
+      <div class="wax-drip drip-7"></div>
+      <div class="wax-drip drip-8"></div>
       <div class="wax-imperfection imperfection-1"></div>
       <div class="wax-imperfection imperfection-2"></div>
       <div class="wax-imperfection imperfection-3"></div>
@@ -887,6 +975,8 @@
       const dustMotes    = document.getElementById('dustMotes');
       const smokeContainer = document.getElementById('smokeContainer');
       const toggleBtn    = document.getElementById('toggleBtn');
+      const heatHaze     = document.getElementById('heatHaze');
+      const turbulenceFilter = document.getElementById('turb');
       const flamePaths   = [
         document.getElementById('flamePath1'),
         document.getElementById('flamePath2'),
@@ -917,7 +1007,7 @@
         return `M${x0},${y0} C${x0},${y0} ${cp1x},${cp1y + 35} ${cp1x},${cp1y} C${cp2x},${cp2y} ${cp2x},${cp2y} ${topX},${topY} C${cp3x},${cp2y} ${cp4x},${cp4y} ${cp4x},${cp4y} C${cp4x},${cp4y + 35} ${x0},${y0} ${x0},${y0} Z`;
       }
 
-      // Animate flame with dynamic shape changes
+      // Animate flame with dynamic shape changes and turbulence
       function animateFlame(timestamp) {
         if (!lastTime) lastTime = timestamp;
         const delta = timestamp - lastTime;
@@ -926,11 +1016,17 @@
             const variation = 2 + i * 0.5;
             path.setAttribute('d', generateFlamePath(140, variation));
           });
-          // Subtle ambient glow flicker
+          // Animate turbulence filter for more natural flame movement
+          const turbX = 0.01 + Math.random() * 0.015;
+          const turbY = 0.02 + Math.random() * 0.025;
+          turbulenceFilter.setAttribute('baseFrequency', `${turbX} ${turbY}`);
+          // Subtle ambient glow flicker with color temperature shift
           const glowScale = 1 + (Math.random() - 0.5) * 0.08;
           const glowOpacity = 0.85 + (Math.random() - 0.5) * 0.15;
+          const hueShift = Math.floor((Math.random() - 0.5) * 10);
           ambientGlow.style.transform = `translateX(-50%) scale(${glowScale})`;
           ambientGlow.style.opacity = glowOpacity;
+          ambientGlow.style.filter = `hue-rotate(${hueShift}deg)`;
           lastTime = timestamp;
         }
         requestAnimationFrame(animateFlame);
@@ -976,6 +1072,7 @@
         ambientGlow.classList.add('extinguished');
         candleShadow.classList.add('extinguished');
         dustMotes.classList.add('extinguished');
+        heatHaze.classList.add('extinguished');
         toggleBtn.textContent = 'Light Candle';
         state = 'extinguished';
         spawnSmoke();
@@ -990,6 +1087,7 @@
         ambientGlow.classList.remove('extinguished');
         candleShadow.classList.remove('extinguished');
         dustMotes.classList.remove('extinguished');
+        heatHaze.classList.remove('extinguished');
         toggleBtn.textContent = 'Put Out';
         state = 'burning';
         setTimeout(() => { busy = false; }, 600);
